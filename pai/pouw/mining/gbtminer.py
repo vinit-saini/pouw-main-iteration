@@ -55,9 +55,11 @@ class Miner:
     @property
     def _rpc_connection(self):
         print(f'_rpc_connection: _rpc_user=${self._rpc_user}  rpc_password=${self._rpc_password} server_ip=${self._server_ip} server_port=${self._server_port}')
-        return AuthServiceProxy("http://%s:%s@%s:%d"
+        proxyConfig = AuthServiceProxy("http://%s:%s@%s:%d"
                                 % (self._rpc_user, self._rpc_password,
                                    self._server_ip, self._server_port))
+        print(f'proxyConfig: {proxyConfig}')
+        return proxyConfig
 
     @staticmethod
     def _check_nonce(blkhash, target):
@@ -69,17 +71,17 @@ class Miner:
         return True
 
     def _get_block_template(self):
-        print(f'pai_address : ${self._pai_address}')
+        print(f'pai_address : {self._pai_address}')
         if self._pai_address is None:
             self._pai_address = self._rpc_connection.getaccountaddress("miner")
-            print(f'new pai_address : ${self._pai_address}')
+            print(f'new pai_address : {self._pai_address}')
         
         height = self._template.height if self._template is not None else 0
         self._template = blktemplate.Template()
         gbt_params = self._template.request(self._pai_address)['params'][0]
-        print(f'gbt_params : ${gbt_params}')
+        print(f'gbt_params : {gbt_params}')
         gbt_resp = self._rpc_connection.getblocktemplate(gbt_params)
-        print(f'gbt_resp : ${gbt_resp}')
+        print(f'gbt_resp : {gbt_resp}')
         self._template.add(gbt_resp)
 
         # invalidate old announcements
