@@ -55,11 +55,7 @@ class Miner:
     @property
     def _rpc_connection(self):
         print(f'_rpc_connection: _rpc_user={self._rpc_user} rpc_password={self._rpc_password} server_ip={self._server_ip} server_port={self._server_port}')
-        proxyConfig = AuthServiceProxy("http://%s:%s@%s:%d"
-                                % (self._rpc_user, self._rpc_password,
-                                self._server_ip, self._server_port))
-        print(f'proxyConfig: {proxyConfig}')
-        return proxyConfig
+        return AuthServiceProxy("http://%s:%s@%s:%d" % (self._rpc_user, self._rpc_password, self._server_ip, self._server_port))
 
     @staticmethod
     def _check_nonce(blkhash, target):
