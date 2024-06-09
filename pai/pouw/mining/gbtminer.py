@@ -54,10 +54,66 @@ class Miner:
 
     @property
     def _rpc_connection(self):
-        print(f'_rpc_connection: _rpc_user={self._rpc_user} rpc_password={self._rpc_password} server_ip={self._server_ip} server_port={self._server_port}')
-        proxyConfig = AuthServiceProxy("http://%s:%s@%s:%d" % (self._rpc_user, self._rpc_password, self._server_ip, self._server_port))
-        print(f'proxyConfig :: {proxyConfig}')
+        try:
+            # Test the connection with a simple RPC call
+            blockchain_info = proxyConfig.getblockchaininfo()
+            print(f'Connected to RPC server. Blockchain info: {blockchain_info}')
+            
+            # Check if the node is downloading blocks
+            if blockchain_info.get('initialblockdownload', False):
+                print('The node is currently downloading blocks. Some RPC calls may not be available until synchronization is complete.')
+            else:
+                print('The node is fully synchronized.')       
+        except Exception as e:
+            print(f'Failed to connect to RPC server: {e}')
         return proxyConfig
+
+    def _get_block_template(self):
+        print(f'IN *** _get_block_template pai_address: {self._pai_address}')
+        
+        try:
+            # Establish connection to RPC
+            rpc_conn = self._rpc_connection()
+            
+            # Wait up to 15 minutes for the node to finish downloading blocks
+            wait_time = 15 * 60  # 15 minutes in seconds
+            interval = 30  # Check every 30 seconds
+            
+            start_time = time.time()
+            
+            while True:
+                blockchain_info = rpc_conn.getblockchaininfo()
+                if not blockchain_info.get('initialblockdownload', False):
+                    print('The node is fully synchronized.')
+                    break
+                
+                elapsed_time = time.time() - start_time
+                if elapsed_time >= wait_time:
+                    print('The node is still downloading blocks after 15 minutes. Please try again later.')
+                    return  # Exit the method if the wait time is exceeded
+                
+                print('The node is still downloading blocks. Waiting...')
+                time.sleep(interval)
+            
+            # Proceed with the block template retrieval after the node is synchronized
+            if self._pai_address is None:
+                self._pai_address = rpc_conn.getaccountaddress("miner")
+                print(f'new pai_address: {self._pai_address}')
+            
+            height = self._template.height if self._template is not None else 0
+            self._template = blktemplate.Template()
+            gbt_params = self._template.request(self._pai_address)['params'][0]
+            print(f'gbt_params: {gbt_params}')
+            gbt_resp = rpc_conn.getblocktemplate(gbt_params)
+            print(f'gbt_resp: {gbt_resp}')
+            self._template.add(gbt_resp)
+            
+            # Invalidate old announcements
+            if self._template.height > height:
+                self._blocks = []
+        
+        except Exception as e:
+            print(f'Error in fetching block template: {e}')
 
     @staticmethod
     def _check_nonce(blkhash, target):
@@ -67,24 +123,6 @@ class Miner:
             if blkhash[31 - i] < target[i]:
                 return True
         return True
-
-    def _get_block_template(self):
-        print(f'pai_address : {self._pai_address}')
-        if self._pai_address is None:
-            self._pai_address = self._rpc_connection.getaccountaddress("miner")
-            print(f'new pai_address : {self._pai_address}')
-        
-        height = self._template.height if self._template is not None else 0
-        self._template = blktemplate.Template()
-        gbt_params = self._template.request(self._pai_address)['params'][0]
-        print(f'gbt_params : {gbt_params}')
-        gbt_resp = self._rpc_connection.getblocktemplate(gbt_params)
-        print(f'gbt_resp : {gbt_resp}')
-        self._template.add(gbt_resp)
-
-        # invalidate old announcements
-        if self._template.height > height:
-            self._blocks = []
 
     # calculate nonce from pouw values
     @staticmethod
