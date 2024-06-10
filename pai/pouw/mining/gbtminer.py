@@ -59,32 +59,29 @@ class Miner:
 
     @property
     def _rpc_connection(self):
-        print(f'_rpc_connection: _rpc_user={self._rpc_user} rpc_password={self._rpc_password} server_ip={self._server_ip} server_port={self._server_port}')
+        print(f'RPC connection parameters : _rpc_user={self._rpc_user} rpc_password={self._rpc_password} server_ip={self._server_ip} server_port={self._server_port}')
         proxyConfig = AuthServiceProxy("http://%s:%s@%s:%d" % (self._rpc_user, self._rpc_password, self._server_ip, self._server_port))
-        print(f'proxyConfig :: {proxyConfig}')
-
-        try:
+        print(f'proxyConfig : {proxyConfig}')
+#        try:
             # Test the connection with a simple RPC call
-            blockchain_info = proxyConfig.getblockchaininfo()
-            print(f'Connected to RPC server. Blockchain info: {blockchain_info}')
+#            blockchain_info = proxyConfig.getblockchaininfo()
+#            print(f'Connected to RPC server. Blockchain info: {blockchain_info}')
             
             # Check if the node is downloading blocks
-            if blockchain_info.get('initialblockdownload', False):
-                print('The node is currently downloading blocks. Some RPC calls may not be available until synchronization is complete.')
-            else:
-                print('rpcCnnection: The node is fully synchronized.')       
-        except Exception as e:
-            print(f'Failed to connect to RPC server: {e}')
+#            if blockchain_info.get('initialblockdownload', False):
+#                print('The node is currently downloading blocks. Some RPC calls may not be available until synchronization is complete.')
+#            else:
+#                print('RPC Connection: The node is fully synchronized.')       
+#        except Exception as e:
+#            print(f'Failed to connect to RPC server: {e}')
         return proxyConfig
 
     def _get_block_template(self):
-        print(f'IN _get_block_template pai_address: {self._pai_address}')
+        print(f'..... in _get_block_template pai_address: {self._pai_address}')
         
         try:
             # Establish connection to RPC
             rpc_conn = self._rpc_connection()
-
-            print(f'rpc_conn information :: {rpc_conn.getinfo()}')
             
             # Wait up to 15 minutes for the node to finish downloading blocks
             wait_time = 15 * 60  # 15 minutes in seconds
@@ -94,6 +91,7 @@ class Miner:
             
             while True:
                 blockchain_info = rpc_conn.getblockchaininfo()
+                print(f'Cheking initialblockdownload in blockchain_info : {blockchain_info}')
                 if not blockchain_info.get('initialblockdownload', False):
                     print('The node is fully synchronized>>>>.')
                     break
@@ -112,12 +110,19 @@ class Miner:
                 print(f'new pai_address: {self._pai_address}')
             
             height = self._template.height if self._template is not None else 0
+            print(f'height: {height}')
+
             self._template = blktemplate.Template()
+            print(f'self._template: {self._template}')
+
             gbt_params = self._template.request(self._pai_address)['params'][0]
             print(f'gbt_params: {gbt_params}')
+
             gbt_resp = rpc_conn.getblocktemplate(gbt_params)
             print(f'gbt_resp: {gbt_resp}')
+            
             self._template.add(gbt_resp)
+            print(f'updated self._template: {self._template}')
             
             # Invalidate old announcements
             if self._template.height > height:
@@ -150,12 +155,17 @@ class Miner:
 
     # build zero-nonce block and return its hash
     def announce_new_block(self):
+        print(f'...in announce_new_block: {self}')
         if (self._template is None) or (self._template.version is None) or (
                 time.time() - self._template.curtime > self._template_refresh_interval):
             self._get_block_template()
 
         block = Block(self._template)
+        print(f'block: {block}')
+        
         self._blocks.append(block)
+        print(f'updated self.blocks: {self._blocks}')
+
         return hexlify(double_sha256(block.header)).decode('ascii')
 
     # check nonce for announced block and return block hex data and calculated nonce
