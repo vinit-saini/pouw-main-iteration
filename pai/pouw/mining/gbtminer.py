@@ -61,7 +61,7 @@ class Miner:
     def _rpc_connection(self):
         print(f'RPC connection parameters : _rpc_user={self._rpc_user} rpc_password={self._rpc_password} server_ip={self._server_ip} server_port={self._server_port}')
         proxyConfig = AuthServiceProxy("http://%s:%s@%s:%d" % (self._rpc_user, self._rpc_password, self._server_ip, self._server_port))
-        print(f'proxyConfig --- : {proxyConfig}')
+        print(f'proxyConfig >> --- : {proxyConfig}')
         return proxyConfig
 
     def _get_block_template(self):
@@ -69,8 +69,9 @@ class Miner:
         
         try:
             # Establish connection to RPC
+            print('....calling rpc-connection function now....')
             rpc_conn = self._rpc_connection()
-            print(f'-----<<<>>> rpc_conn returned : {rpc_conn}')
+            print(f'-----<<<1>>> rpc_conn returned : {rpc_conn}')
             
             # Wait up to 15 minutes for the node to finish downloading blocks
             wait_time = 15 * 60  # 15 minutes in seconds
@@ -148,6 +149,7 @@ class Miner:
         print(f'...in announce_new_block: {self}')
         if (self._template is None) or (self._template.version is None) or (
                 time.time() - self._template.curtime > self._template_refresh_interval):
+            print('...calling get_block_template function now.....')
             self._get_block_template()
 
         block = Block(self._template)
