@@ -9,7 +9,10 @@ from bitcoinrpc.config import read_default_config
 from pai.pouw.mining.blkmaker import blktemplate
 from pai.pouw.mining.blkmaker.blkmaker import double_sha256, sha256_hexdigest, sha256_digest
 from pai.pouw.mining.utils import serialize_local_message_map
+import logging
 
+logging.basicConfig()
+logging.getLogger("BitcoinRPC").setLevel(logging.DEBUG)
 
 def create_miner_based_on_cmd_parameters():
     parser = argparse.ArgumentParser(description='Real PAICoin blockchain miner code stub')
@@ -44,6 +47,8 @@ class Miner:
             raise RuntimeError('Path toward paicoin.conf must be provided for node to work')
         cfg = read_default_config(paicoin_cfg_file)
 
+        print(f'Miner cfg : {cfg}')
+
         self._server_port = int(cfg.get('rpcport', 4002))
         self._rpc_user = cfg.get('rpcuser', 'paicoin')
         self._rpc_password = cfg.get('rpcpassword', '')
@@ -67,28 +72,30 @@ class Miner:
             if blockchain_info.get('initialblockdownload', False):
                 print('The node is currently downloading blocks. Some RPC calls may not be available until synchronization is complete.')
             else:
-                print('The node is fully synchronized.')       
+                print('rpcCnnection: The node is fully synchronized.')       
         except Exception as e:
             print(f'Failed to connect to RPC server: {e}')
         return proxyConfig
 
     def _get_block_template(self):
-        print(f'IN *** _get_block_template pai_address: {self._pai_address}')
+        print(f'IN _get_block_template pai_address: {self._pai_address}')
         
         try:
             # Establish connection to RPC
             rpc_conn = self._rpc_connection()
+
+            print(f'rpc_conn information :: {rpc_conn.getinfo()}')
             
             # Wait up to 15 minutes for the node to finish downloading blocks
             wait_time = 15 * 60  # 15 minutes in seconds
-            interval = 30  # Check every 30 seconds
+            interval = 1  # Check every 1 seconds
             
             start_time = time.time()
             
             while True:
                 blockchain_info = rpc_conn.getblockchaininfo()
                 if not blockchain_info.get('initialblockdownload', False):
-                    print('The node is fully synchronized.')
+                    print('The node is fully synchronized>>>>.')
                     break
                 
                 elapsed_time = time.time() - start_time
