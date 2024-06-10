@@ -62,18 +62,6 @@ class Miner:
         print(f'RPC connection parameters : _rpc_user={self._rpc_user} rpc_password={self._rpc_password} server_ip={self._server_ip} server_port={self._server_port}')
         proxyConfig = AuthServiceProxy("http://%s:%s@%s:%d" % (self._rpc_user, self._rpc_password, self._server_ip, self._server_port))
         print(f'proxyConfig --- : {proxyConfig}')
-#        try:
-            # Test the connection with a simple RPC call
-#            blockchain_info = proxyConfig.getblockchaininfo()
-#            print(f'Connected to RPC server. Blockchain info: {blockchain_info}')
-            
-            # Check if the node is downloading blocks
-#            if blockchain_info.get('initialblockdownload', False):
-#                print('The node is currently downloading blocks. Some RPC calls may not be available until synchronization is complete.')
-#            else:
-#                print('RPC Connection: The node is fully synchronized.')       
-#        except Exception as e:
-#            print(f'Failed to connect to RPC server: {e}')
         return proxyConfig
 
     def _get_block_template(self):
@@ -82,6 +70,7 @@ class Miner:
         try:
             # Establish connection to RPC
             rpc_conn = self._rpc_connection()
+            print(f'-----<<<>>> rpc_conn returned : {rpc_conn}')
             
             # Wait up to 15 minutes for the node to finish downloading blocks
             wait_time = 15 * 60  # 15 minutes in seconds
@@ -90,7 +79,7 @@ class Miner:
             start_time = time.time()
             
             while True:
-                print('----->>> rpc_conn: {rpc_conn}')
+                print(f'----->>> rpc_conn: {rpc_conn}')
                 blockchain_info = rpc_conn.getblockchaininfo()
                 print(f'Cheking initialblockdownload in blockchain_info : {blockchain_info}')
                 if not blockchain_info.get('initialblockdownload', False):
