@@ -61,7 +61,7 @@ class Miner:
     def _rpc_connection(self):
         print(f'RPC connection parameters : _rpc_user={self._rpc_user} rpc_password={self._rpc_password} server_ip={self._server_ip} server_port={self._server_port}')
         proxyConfig = AuthServiceProxy("http://%s:%s@%s:%d" % (self._rpc_user, self._rpc_password, self._server_ip, self._server_port))
-        print(f'proxyConfig : {proxyConfig}')
+        print(f'proxyConfig --- : {proxyConfig}')
 #        try:
             # Test the connection with a simple RPC call
 #            blockchain_info = proxyConfig.getblockchaininfo()
@@ -90,6 +90,7 @@ class Miner:
             start_time = time.time()
             
             while True:
+                print('----->>> rpc_conn: {rpc_conn}')
                 blockchain_info = rpc_conn.getblockchaininfo()
                 print(f'Cheking initialblockdownload in blockchain_info : {blockchain_info}')
                 if not blockchain_info.get('initialblockdownload', False):
