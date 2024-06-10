@@ -70,7 +70,7 @@ class Miner:
         try:
             # Establish connection to RPC
             print('....calling rpc-connection function now....')
-            rpc_conn = self._rpc_connection()
+            rpc_conn = self._rpc_connection
             print(f'-----<<<1>>> rpc_conn returned : {rpc_conn}')
             
             # Wait up to 15 minutes for the node to finish downloading blocks
